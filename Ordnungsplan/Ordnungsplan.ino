@@ -3,21 +3,23 @@
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 
-//For ESP32 Dev Module
+// Set up the Display pins
+#define Display_SDA 26
+#define Display_SCL 27
 
 // Create the U8G2 display object
-U8G2_SSD1309_128X64_NONAME2_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, 26, 27);
+U8G2_SSD1309_128X64_NONAME2_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, Display_SDA, Display_SCL);
 
 // Create the TinyGPS++ object
 TinyGPSPlus gps;
 
 // Set up the GPS pins
-#define RXPin 16
-#define TXPin 17
-#define GPSBaud 9600
+#define GPS_RXPin 16
+#define GPS_TXPin 17
+#define GPS_Baud 9600
 
 // Set up the serial port for GPS data
-SoftwareSerial ss(RXPin, TXPin);
+SoftwareSerial ss(GPS_RXPin, GPS_TXPin);
 
 // Define the DEBUG macro to enable or disable the debug output
 #define DEBUG 0
@@ -114,11 +116,11 @@ void setup() {
   u8g2.sendBuffer();
 
   // Initialize the GPS pins
-  pinMode(RXPin, INPUT);
-  pinMode(TXPin, OUTPUT);
+  pinMode(GPS_RXPin, INPUT);
+  pinMode(GPS_TXPin, OUTPUT);
 
   // Initialize the GPS serial port
-  ss.begin(GPSBaud);
+  ss.begin(GPS_Baud);
 
 #if DEBUG
   // Print a message to the serial monitor to indicate that the setup is complete
