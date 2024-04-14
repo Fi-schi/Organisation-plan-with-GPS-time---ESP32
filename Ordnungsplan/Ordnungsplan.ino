@@ -3,9 +3,28 @@
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 
+//---------Setup-Options---------
 // Set up the Display pins
 #define Display_SDA 26
 #define Display_SCL 27
+
+// Set up the GPS pins
+#define GPS_RXPin 16
+#define GPS_TXPin 17
+#define GPS_Baud 9600
+
+// Define  the time shift in your region
+#define time_shift 2 //(GM+2)
+
+// Define the DEBUG macro to enable or disable the debug output
+#define DEBUG 0
+// Define the GPS_DEBUG macro to enable or disable the GPS debug output
+#define GPS_DEBUG 1
+
+
+
+
+
 
 // Create the U8G2 display object
 U8G2_SSD1309_128X64_NONAME2_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, Display_SDA, Display_SCL);
@@ -13,16 +32,8 @@ U8G2_SSD1309_128X64_NONAME2_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, Di
 // Create the TinyGPS++ object
 TinyGPSPlus gps;
 
-// Set up the GPS pins
-#define GPS_RXPin 16
-#define GPS_TXPin 17
-#define GPS_Baud 9600
-
 // Set up the serial port for GPS data
 SoftwareSerial ss(GPS_RXPin, GPS_TXPin);
-
-// Define the DEBUG macro to enable or disable the debug output
-#define DEBUG 0
 
 // Add the dayOfYear and isoWeekNumber functions here
 int dayOfYear(int year, int month, int day) {
@@ -146,7 +157,7 @@ void loop() {
       int isoWeek = isoWeekNumber(year, month, day);
 
       // Convert the GPS time to local time (GMT+2)
-      hour = hour + 2;
+      hour = hour + time_shift;
       if (hour >= 24) {
         hour = hour - 24;
         day++;
@@ -159,6 +170,33 @@ void loop() {
           }
         }
       }
+
+#if GPS_DEBUG
+      // Print the GPS data to the serial monitor
+      Serial.print("Date: ");
+      Serial.print(gps.date.day());
+      Serial.print("/");
+      Serial.print(gps.date.month());
+      Serial.print("/");
+      Serial.print(gps.date.year());
+      Serial.print(" Time: ");
+      Serial.print(gps.time.hour());
+      Serial.print(":");
+      Serial.print(gps.time.minute());
+      Serial.print(":");
+      Serial.print(gps.time.second());
+      Serial.print(" Quality: ");
+      Serial.println(gps.satellites.value());
+      Serial.print(F("DIAGS      Chars="));
+      Serial.print(gps.charsProcessed());
+      Serial.print(F(" Sentences-with-Fix="));
+      Serial.print(gps.sentencesWithFix());
+      Serial.print(F(" Failed-checksum="));
+      Serial.print(gps.failedChecksum());
+      Serial.print(F(" Passed-checksum="));
+      Serial.println(gps.passedChecksum());
+
+#endif
 
 #if DEBUG
       // Display the time and ISO week on the serial monitor
