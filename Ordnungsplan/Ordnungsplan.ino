@@ -17,9 +17,9 @@
 #define time_shift 2 //(GM+2)
 
 // Define the DEBUG macro to enable or disable the debug output
-#define DEBUG 0
+#define DEBUG 1
 // Define the GPS_DEBUG macro to enable or disable the GPS debug output
-#define GPS_DEBUG 1
+#define GPS_DEBUG 0
 
 
 
@@ -44,7 +44,7 @@ int dayOfYear(int year, int month, int day) {
 int isoWeekNumber(int year, int month, int day) {
   // Calculate the ISO week number
   int doy = dayOfYear(year, month, day);
-  int doyOfFirstThursday = (4 - (year + (year/4) - (year/100) + (year/400)) % 7 + doy) % 7;
+  int doyOfFirstThursday = (4 - (year + (year/4) - (year/100) + (year/400)) % 7 + 10) % 7; // Änderung hier
   return (doy - doyOfFirstThursday) / 7 + 1;
 }
 
@@ -212,19 +212,19 @@ void loop() {
       String Zimmer1, Zimmer2, Zimmer3;
       switch (isoWeek % 3) {
         case 1:
-          Zimmer1 = "3.02.1";
+          Zimmer1 = "3.02.3";
           Zimmer2 = "3.02.2";
-          Zimmer3 = "3.02.3";
-          break;
-        case 2:
-          Zimmer1 = "3.02.2";
-          Zimmer2 = "3.02.3";
           Zimmer3 = "3.02.1";
           break;
-        case 0:
-          Zimmer1 = "3.02.3";
-          Zimmer2 = "3.02.1";
+        case 2:
+          Zimmer1 = "3.02.1";
+          Zimmer2 = "3.02.3";
           Zimmer3 = "3.02.2";
+          break;
+        case 0:
+          Zimmer1 = "3.02.2";
+          Zimmer2 = "3.02.1";
+          Zimmer3 = "3.02.3";
           break;
       }
 
