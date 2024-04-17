@@ -5,8 +5,8 @@
 
 //---------Setup-Options---------
 // Set up the Display pins
-#define Display_SDA 26
-#define Display_SCL 27
+#define Display_SDA 27
+#define Display_SCL 26
 
 // Set up the GPS pins
 #define GPS_RXPin 16
