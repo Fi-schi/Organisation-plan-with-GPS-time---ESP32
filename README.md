@@ -1,4 +1,4 @@
-# Organisation plan-with-GPS-time---ESP32
+# Organisation-plan-with-GPS-time---ESP32
 
 The project displays on a screen an organisation plan for a flat shared by 3 people. 
 Tasks rotate on a weekly basis. The current time and date are also displayed.
