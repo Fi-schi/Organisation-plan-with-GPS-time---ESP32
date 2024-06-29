@@ -85,10 +85,10 @@ void drawMenu(String Z1, String Z2, String Z3, int year, int month, int day, int
 
   // Display date and time
   u8g2.setCursor(35, 57);
-  u8g2.print(day);
   if (day < 10) {
   u8g2.print("0");
   }
+  u8g2.print(day);
   u8g2.print(".");
   if (month < 10) {
   u8g2.print("0");
