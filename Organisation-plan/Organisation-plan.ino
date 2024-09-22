@@ -16,14 +16,31 @@
 // Define  the time shift in your region
 #define time_shift 2 //(GM+2)
 
+// Interrupt Pins
+#define ButtonPin 2
+
 // Define the DEBUG macro to enable or disable the debug output
 #define DEBUG 1
 // Define the GPS_DEBUG macro to enable or disable the GPS debug output
 #define GPS_DEBUG 0
 
+volatile bool Button = false; //Toggle variable for the Interrupt
 
+volatile static unsigned long last_interrupt_time = 0;
+volatile unsigned long interrupt_time;
 
-
+void handleButtonPress() {
+  interrupt_time = millis();
+  if (interrupt_time - last_interrupt_time > 250) {//Interrupt faster then 250ms
+    if (Button == false){
+      Button = true;
+    }
+    else{
+      Button = false;
+    }
+  }
+  last_interrupt_time = interrupt_time;
+}
 
 // Create the U8G2 display object
 U8G2_SSD1309_128X64_NONAME2_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, Display_SDA, Display_SCL);
@@ -42,13 +59,19 @@ int dayOfYear(int year, int month, int day) {
 }
 
 int isoWeekNumber(int year, int month, int day) {
-  // Calculate the ISO week number
   int doy = dayOfYear(year, month, day);
-  int doyOfFirstThursday = (4 - (year + (year/4) - (year/100) + (year/400)) % 7 + 10) % 7; // Änderung hier
-  return (doy - doyOfFirstThursday) / 7 + 1;
+  // Calculate the day of the week (0 = Monday, ..., 6 = Sunday)
+  int dayOfWeek = (doy + ((year + (year/4) - (year/100) + (year/400)) % 7)) % 7;
+  // Adjust for Sunday-to-Monday transition
+  if (dayOfWeek == 6) { 
+    doy++; // Move Sunday to Monday to start new week
+  }
+  int doyOfFirstMonday = (8 - (year + (year/4) - (year/100) + (year/400)) % 7) % 7;
+  return (doy - doyOfFirstMonday) / 7 + 1;
 }
 
-void drawMenu(String Z1, String Z2, String Z3, int year, int month, int day, int hour, int minute, int second) {
+
+void drawMenu_3(String Z1, String Z2, String Z3, int year, int month, int day, int hour, int minute, int second) {
   // Draw the cleaningplan on the display with time and date
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
@@ -115,6 +138,73 @@ void drawMenu(String Z1, String Z2, String Z3, int year, int month, int day, int
   u8g2.sendBuffer();
 }
 
+void drawMenu_2(String Z1, String Z2, int year, int month, int day, int hour, int minute, int second) {
+  // Draw the cleaningplan on the display with time and date
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.setCursor(5, 12);
+  String S1 = "K";
+  String S2 = "\xfc";
+  String S3 = "che";
+  String Kueche = S1 + S2 + S3;
+  u8g2.print(Kueche);
+  u8g2.setCursor(45, 12);
+  u8g2.print("|Bad");
+  u8g2.setCursor(85, 12);
+  u8g2.print("|Flur");
+
+  u8g2.setCursor(45, 17);
+  u8g2.print("|");
+  u8g2.setCursor(85, 17);
+  u8g2.print("|");
+
+  u8g2.setCursor(45, 22);
+  u8g2.print("|");
+  u8g2.setCursor(85, 22);
+  u8g2.print("|");
+
+  u8g2.setFont(u8g2_font_5x8_mn);
+  u8g2.setCursor(5, 22);
+  u8g2.print(Z1);
+  u8g2.setCursor(50, 22);
+  u8g2.print(Z2);
+ // u8g2.setCursor(90, 22);
+ // u8g2.print(Z3);
+
+  u8g2.setFont(u8g2_font_6x10_tf);
+
+  // Display date and time
+  u8g2.setCursor(35, 57);
+  if (day < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(day);
+  u8g2.print(".");
+  if (month < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(month);
+  u8g2.print(".");
+  u8g2.print(year);
+  u8g2.setCursor(38, 42);
+  if (hour < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(hour);
+  u8g2.print(":");
+  if (minute < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(minute);
+  u8g2.print(":");
+  if (second < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(second);
+
+  u8g2.sendBuffer();
+}
+
 void setup() {
   // Initialize the serial port for debugging
   Serial.begin(115200);
@@ -131,6 +221,11 @@ void setup() {
 
   // Initialize the GPS serial port
   ss.begin(GPS_Baud);
+
+  // Set up the Button Pin as input and attach the interrupt
+  pinMode(ButtonPin, INPUT_PULLUP);  // Set the pin to pull-up mode
+  attachInterrupt(digitalPinToInterrupt(ButtonPin), handleButtonPress, FALLING);  // Interrupt on Rising Edge
+
 
 #if DEBUG
   // Print a message to the serial monitor to indicate that the setup is complete
@@ -209,27 +304,31 @@ void loop() {
 #endif
 
       // Assign the rooms to different strings based on the week number
-      String Zimmer1, Zimmer2, Zimmer3;
+      String Zimmer1_3, Zimmer2_3, Zimmer3_3;
       switch (isoWeek % 3) {
         case 1:
-          Zimmer1 = "3.02.3";
-          Zimmer2 = "3.02.2";
-          Zimmer3 = "3.02.1";
+          Zimmer1_3 = "3.02.3";
+          Zimmer2_3 = "3.02.2";
+          Zimmer3_3 = "3.02.1";
           break;
         case 2:
-          Zimmer1 = "3.02.1";
-          Zimmer2 = "3.02.3";
-          Zimmer3 = "3.02.2";
+          Zimmer1_3 = "3.02.1";
+          Zimmer2_3 = "3.02.3";
+          Zimmer3_3 = "3.02.2";
           break;
         case 0:
-          Zimmer1 = "3.02.2";
-          Zimmer2 = "3.02.1";
-          Zimmer3 = "3.02.3";
+          Zimmer1_3 = "3.02.2";
+          Zimmer2_3 = "3.02.1";
+          Zimmer3_3 = "3.02.3";
           break;
       }
 
       // Display the time and ISO week on the screen
-      drawMenu(Zimmer1, Zimmer2, Zimmer3, year, month, day, hour, minute, second);
+      if(Button){
+        drawMenu_2(Zimmer1_3, Zimmer2_3, year, month, day, hour, minute, second);
+      }else{
+        drawMenu_3(Zimmer1_3, Zimmer2_3, Zimmer3_3, year, month, day, hour, minute, second);
+      }
     }
   }
 }
