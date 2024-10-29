@@ -17,14 +17,14 @@
 #define time_shift 2 //(GM+2)
 
 // Interrupt Pins
-#define ButtonPin 2
+#define ButtonPin 18
 
 // Define the DEBUG macro to enable or disable the debug output
-#define DEBUG 1
+#define DEBUG 0
 // Define the GPS_DEBUG macro to enable or disable the GPS debug output
 #define GPS_DEBUG 0
 
-volatile bool Button = false; //Toggle variable for the Interrupt
+volatile int Button = 0; //Toggle variable for the Interrupt
 
 volatile static unsigned long last_interrupt_time = 0;
 volatile unsigned long interrupt_time;
@@ -32,11 +32,11 @@ volatile unsigned long interrupt_time;
 void handleButtonPress() {
   interrupt_time = millis();
   if (interrupt_time - last_interrupt_time > 250) {//Interrupt faster then 250ms
-    if (Button == false){
-      Button = true;
+    if (Button == 3){
+      Button = 0;
     }
     else{
-      Button = false;
+      Button ++;
     }
   }
   last_interrupt_time = interrupt_time;
@@ -71,7 +71,27 @@ int isoWeekNumber(int year, int month, int day) {
 }
 
 
-void drawMenu_3(String Z1, String Z2, String Z3, int year, int month, int day, int hour, int minute, int second) {
+void drawMenu_3(int isoWeek, int year, int month, int day, int hour, int minute, int second) {
+
+      // Assign the rooms to different strings based on the week number
+      String Z1, Z2, Z3;
+      switch (isoWeek % 3) {
+        case 1:
+          Z1 = "3.02.3";
+          Z2 = "3.02.2";
+          Z3 = "3.02.1";
+          break;
+        case 2:
+          Z1 = "3.02.1";
+          Z2 = "3.02.3";
+          Z3 = "3.02.2";
+          break;
+        case 0:
+          Z1 = "3.02.2";
+          Z2 = "3.02.1";
+          Z3 = "3.02.3";
+          break;
+      }
   // Draw the cleaningplan on the display with time and date
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
@@ -82,9 +102,9 @@ void drawMenu_3(String Z1, String Z2, String Z3, int year, int month, int day, i
   String Kueche = S1 + S2 + S3;
   u8g2.print(Kueche);
   u8g2.setCursor(45, 12);
-  u8g2.print("|Bad");
-  u8g2.setCursor(85, 12);
   u8g2.print("|Flur");
+  u8g2.setCursor(85, 12);
+  u8g2.print("|Bad");
 
   u8g2.setCursor(45, 17);
   u8g2.print("|");
@@ -100,9 +120,86 @@ void drawMenu_3(String Z1, String Z2, String Z3, int year, int month, int day, i
   u8g2.setCursor(5, 22);
   u8g2.print(Z1);
   u8g2.setCursor(50, 22);
-  u8g2.print(Z2);
-  u8g2.setCursor(90, 22);
   u8g2.print(Z3);
+  u8g2.setCursor(90, 22);
+  u8g2.print(Z2);
+
+  u8g2.setFont(u8g2_font_6x10_tf);
+
+  // Display date and time
+  u8g2.setCursor(35, 57);
+  if (day < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(day);
+  u8g2.print(".");
+  if (month < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(month);
+  u8g2.print(".");
+  u8g2.print(year);
+  
+  u8g2.setCursor(38, 42);
+  if (hour < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(hour);
+  u8g2.print(":");
+  if (minute < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(minute);
+  u8g2.print(":");
+  if (second < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(second);
+
+  u8g2.sendBuffer();
+}
+
+
+void drawMenu_2_1(int isoWeek, int year, int month, int day, int hour, int minute, int second) {
+
+   // Assign the rooms to different strings based on the week number
+      String Z1, Z2;
+
+   if ((isoWeek % 2) == 0) {
+        Z1 = "3.02.1";
+        Z2 = "3.02.2";
+   }else{
+        Z1 = "3.02.2";
+        Z2 = "3.02.1";    
+   }
+
+  // Draw the cleaningplan on the display with time and date
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.setCursor(5, 12);
+  String S1 = "K";
+  String S2 = "\xfc";
+  String S3 = "che";
+  String S4 = " & Flur";
+
+  String Kueche = S1 + S2 + S3 +S4;
+  u8g2.print(Kueche);
+  u8g2.setCursor(90, 12);
+  u8g2.print("Bad");
+
+  u8g2.setCursor(80, 12);
+  u8g2.print("|");
+  u8g2.setCursor(80, 17);
+  u8g2.print("|");
+  u8g2.setCursor(80, 22);
+  u8g2.print("|");
+
+  u8g2.setFont(u8g2_font_5x8_mn);
+  u8g2.setCursor(30, 22);
+  u8g2.print(Z1);
+  u8g2.setCursor(90, 22);
+  u8g2.print(Z2);
+
 
   u8g2.setFont(u8g2_font_6x10_tf);
 
@@ -137,8 +234,19 @@ void drawMenu_3(String Z1, String Z2, String Z3, int year, int month, int day, i
 
   u8g2.sendBuffer();
 }
+void drawMenu_2_2(int isoWeek, int year, int month, int day, int hour, int minute, int second) {
 
-void drawMenu_2(String Z1, String Z2, int year, int month, int day, int hour, int minute, int second) {
+   // Assign the rooms to different strings based on the week number
+      String Z1, Z2;
+
+   if ((isoWeek % 2) == 0) {
+        Z1 = "3.02.1";
+        Z2 = "3.02.3";
+   }else{
+        Z1 = "3.02.3";
+        Z2 = "3.02.1";    
+   }
+
   // Draw the cleaningplan on the display with time and date
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
@@ -146,30 +254,100 @@ void drawMenu_2(String Z1, String Z2, int year, int month, int day, int hour, in
   String S1 = "K";
   String S2 = "\xfc";
   String S3 = "che";
-  String Kueche = S1 + S2 + S3;
+  String S4 = " & Flur";
+
+  String Kueche = S1 + S2 + S3 +S4;
   u8g2.print(Kueche);
-  u8g2.setCursor(45, 12);
-  u8g2.print("|Bad");
-  u8g2.setCursor(85, 12);
-  u8g2.print("|Flur");
+  u8g2.setCursor(90, 12);
+  u8g2.print("Bad");
 
-  u8g2.setCursor(45, 17);
+  u8g2.setCursor(80, 12);
   u8g2.print("|");
-  u8g2.setCursor(85, 17);
+  u8g2.setCursor(80, 17);
   u8g2.print("|");
-
-  u8g2.setCursor(45, 22);
-  u8g2.print("|");
-  u8g2.setCursor(85, 22);
+  u8g2.setCursor(80, 22);
   u8g2.print("|");
 
   u8g2.setFont(u8g2_font_5x8_mn);
-  u8g2.setCursor(5, 22);
+  u8g2.setCursor(30, 22);
   u8g2.print(Z1);
-  u8g2.setCursor(50, 22);
+  u8g2.setCursor(90, 22);
   u8g2.print(Z2);
- // u8g2.setCursor(90, 22);
- // u8g2.print(Z3);
+
+
+  u8g2.setFont(u8g2_font_6x10_tf);
+
+  // Display date and time
+  u8g2.setCursor(35, 57);
+  if (day < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(day);
+  u8g2.print(".");
+  if (month < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(month);
+  u8g2.print(".");
+  u8g2.print(year);
+  u8g2.setCursor(38, 42);
+  if (hour < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(hour);
+  u8g2.print(":");
+  if (minute < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(minute);
+  u8g2.print(":");
+  if (second < 10) {
+  u8g2.print("0");
+  }
+  u8g2.print(second);
+
+  u8g2.sendBuffer();
+}
+void drawMenu_2_3(int isoWeek, int year, int month, int day, int hour, int minute, int second) {
+
+   // Assign the rooms to different strings based on the week number
+      String Z1, Z2;
+
+   if ((isoWeek % 2) == 0) {
+        Z1 = "3.02.2";
+        Z2 = "3.02.3";
+   }else{
+        Z1 = "3.02.3";
+        Z2 = "3.02.2";    
+   }
+
+  // Draw the cleaningplan on the display with time and date
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.setCursor(5, 12);
+  String S1 = "K";
+  String S2 = "\xfc";
+  String S3 = "che";
+  String S4 = " & Flur";
+
+  String Kueche = S1 + S2 + S3 +S4;
+  u8g2.print(Kueche);
+  u8g2.setCursor(90, 12);
+  u8g2.print("Bad");
+
+  u8g2.setCursor(80, 12);
+  u8g2.print("|");
+  u8g2.setCursor(80, 17);
+  u8g2.print("|");
+  u8g2.setCursor(80, 22);
+  u8g2.print("|");
+
+  u8g2.setFont(u8g2_font_5x8_mn);
+  u8g2.setCursor(30, 22);
+  u8g2.print(Z1);
+  u8g2.setCursor(90, 22);
+  u8g2.print(Z2);
+
 
   u8g2.setFont(u8g2_font_6x10_tf);
 
@@ -303,32 +481,27 @@ void loop() {
       Serial.println(isoWeek);
 #endif
 
-      // Assign the rooms to different strings based on the week number
-      String Zimmer1_3, Zimmer2_3, Zimmer3_3;
-      switch (isoWeek % 3) {
-        case 1:
-          Zimmer1_3 = "3.02.3";
-          Zimmer2_3 = "3.02.2";
-          Zimmer3_3 = "3.02.1";
-          break;
-        case 2:
-          Zimmer1_3 = "3.02.1";
-          Zimmer2_3 = "3.02.3";
-          Zimmer3_3 = "3.02.2";
-          break;
-        case 0:
-          Zimmer1_3 = "3.02.2";
-          Zimmer2_3 = "3.02.1";
-          Zimmer3_3 = "3.02.3";
-          break;
+      // Display the time and ISO week on the screen
+      switch(Button){
+        case 0: {
+            drawMenu_3(isoWeek, year, month, day, hour, minute, second);
+            break;
+        }
+        case 1: {
+            drawMenu_2_1(isoWeek, year, month, day, hour, minute, second);
+            break;
+        }
+        case 2: {
+            drawMenu_2_2(isoWeek, year, month, day, hour, minute, second);
+            break;
+        }
+        case 3: {
+            drawMenu_2_3(isoWeek, year, month, day, hour, minute, second);
+            break;
+        }
+        default: break;
       }
 
-      // Display the time and ISO week on the screen
-      if(Button){
-        drawMenu_2(Zimmer1_3, Zimmer2_3, year, month, day, hour, minute, second);
-      }else{
-        drawMenu_3(Zimmer1_3, Zimmer2_3, Zimmer3_3, year, month, day, hour, minute, second);
-      }
     }
   }
 }
